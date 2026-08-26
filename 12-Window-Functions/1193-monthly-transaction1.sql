@@ -16,6 +16,8 @@ FROM (
         country,
 
         -- Count all transactions for each month and country
+        -- %Y - means 4 digit year, %m - means 2 digit month
+        -- we cant write %M, it will give us the full month name, like December, which is not what we want
         COUNT(*) OVER (
             PARTITION BY DATE_FORMAT(trans_date, '%Y-%m'), country
         ) AS trans_count,
@@ -47,3 +49,10 @@ FROM (
 
 -- Give the inner query a name
 ) t;
+
+-- In place of sum(state = 'approved ) we can write 
+-- COUNT(
+--    CASE
+        -- WHEN state = 'approved' THEN 1
+    -- END
+-- )

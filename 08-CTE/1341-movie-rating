@@ -1,0 +1,97 @@
+-- Find:
+-- 1. The user who rated the most movies
+-- 2. The movie with the highest average rating in February 2020
+-- Finally, combine both results into one output.
+
+-- Main concepts:
+-- JOIN + GROUP BY + Aggregate Functions + CTE + ORDER BY/LIMIT + UNION ALL
+
+WITH x AS (
+
+    -- Count how many movies each user has rated
+    SELECT 
+        u.name,
+        COUNT(*) AS cnt
+    FROM Users u
+
+    -- Connect users with their movie ratings
+    JOIN MovieRating mr
+        ON u.user_id = mr.user_id
+
+    -- Get the total number of ratings for each user
+    GROUP BY u.user_id, u.name
+),
+
+y AS (
+
+    -- Calculate the average rating for each movie
+    SELECT 
+        m.title,
+        AVG(mr.rating) AS avg_rate
+    FROM Movies m
+
+    -- Connect movies with their ratings
+    JOIN MovieRating mr
+        ON m.movie_id = mr.movie_id
+
+    -- Consider only ratings given in February 2020
+    WHERE YEAR(mr.created_at) = 2020
+      AND MONTH(mr.created_at) = 2
+
+    -- Calculate the average separately for each movie
+    GROUP BY m.movie_id, m.title
+)
+
+-- Get the user with the highest number of ratings
+SELECT (
+    SELECT name
+    FROM x
+
+    -- Highest rating count comes first
+    -- If there is a tie, choose the name alphabetically
+    ORDER BY cnt DESC, name ASC
+
+    -- We only need the top user
+    LIMIT 1
+)
+
+UNION ALL
+
+-- Get the movie with the highest average rating
+SELECT (
+    SELECT title
+    FROM y
+
+    -- Highest average rating comes first
+    -- If there is a tie, choose the title alphabetically
+    ORDER BY avg_rate DESC, title ASC
+
+    -- We only need the top movie
+    LIMIT 1
+);
+
+
+-- We use union all instead of union because union will not consider duplicate values, and we want to keep all results even if they are the same.
+
+-- Alternate solution
+-- Find the user who rated the most movies
+SELECT u.name
+FROM Users u
+JOIN MovieRating mr
+    ON u.user_id = mr.user_id
+GROUP BY u.user_id, u.name
+ORDER BY COUNT(*) DESC, u.name ASC
+LIMIT 1
+
+UNION ALL
+
+-- Find the movie with the highest average rating in February 2020
+SELECT m.title
+FROM Movies m
+JOIN MovieRating mr
+    ON m.movie_id = mr.movie_id
+WHERE YEAR(mr.created_at) = 2020
+  AND MONTH(mr.created_at) = 2
+GROUP BY m.movie_id, m.title
+ORDER BY AVG(mr.rating) DESC, m.title ASC
+LIMIT 1;

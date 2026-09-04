@@ -19,6 +19,7 @@ WITH x AS (
         ON u.user_id = mr.user_id
 
     -- Get the total number of ratings for each user
+    -- here id is suffiecint but we have added name for safety because if id is not primary key then it is not compulsory that id is unique it can be same for two users also
     GROUP BY u.user_id, u.name
 ),
 
